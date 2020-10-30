@@ -93,7 +93,7 @@ Authorizing Ingress on 22 TCP port to the instance from Controller Node
 <p align="center">
   <img src="/screenshots/allow_ssh_ingress.png" width="950" title="Allow SSH Ingress">
   <br>
-  <em>Fig 5.: AWS Security Group </em>
+  <em>Fig 6.: AWS Security Group </em>
 </p>
 
 ### Instance Key-Pair Generation
@@ -113,7 +113,7 @@ aws ec2 create-key-pair --key-name web-key --profile aws_terraform_user | jq -r 
 <p align="center">
   <img src="/screenshots/key-pair-creation.png" width="950" title="AWS Instance Key-Pair">
   <br>
-  <em>Fig 6.: Configure AWS Key-Pair </em>
+  <em>Fig 7.: Configure AWS Key-Pair </em>
 </p>
 
 
@@ -155,12 +155,78 @@ aws ec2 run-instances \
 >
 > tag-specifications => Tags attached with the instance
 
-
 <p align="center">
   <img src="/screenshots/ec2_launch.png" width="950" title="AWS Instance">
   <br>
-  <em>Fig 7.: EC2 instance </em>
+  <em>Fig 8.: EC2 instance </em>
 </p>
 
 
-###
+### Provision EBS Volume
+
+The additional volume of 1 GB is provisioned and attached to the EC2 instance for data persitency and application data segregation from the operating system data.
+
+```sh
+aws ec2 create-volume \
+--availability-zone $instance_availability_zone \
+--size 1 \
+--volume-type gp2 \
+--tag-specifications 'ResourceType=volume,Tags=[{Key="Name",Value="Web-Server"}]' \
+--profile aws_terraform_user
+```
+
+Volume attached to the instance using the below CLI command
+
+```sh
+aws ec2 attach-volume \
+--device /dev/sdb \
+--instance-id $instance_id \
+--volume-id $volume_id \
+--profile aws_terraform_user 
+```
+
+<p align="center">
+  <img src="/screenshots/volume_creation.png" width="950" title="AWS EBS volume">
+  <br>
+  <em>Fig 9.: EBS Volume </em>
+</p>
+
+
+## Screenshots
+
+**1. Security Group**
+
+<p align="center">
+  <img src="/screenshots/security_group.png" width="950" title="AWS EC2 security group">
+  <br>
+  <em>Fig 10.: Security Group </em>
+</p>
+
+
+**2. Instance Key-Pair**
+
+<p align="center">
+  <img src="/screenshots/key-pair.png" width="950" title="AWS Key-Pair">
+  <br>
+  <em>Fig 11.: Instance Key-Pair </em>
+</p>
+
+
+**3. EC2 Instance**
+
+<p align="center">
+  <img src="/screenshots/web-instance.png" width="950" title="AWS EC2 instance">
+  <br>
+  <em>Fig 12.: AWS EC2 instance </em>
+</p>
+
+
+**4. EBS Volume**
+
+<p align="center">
+  <img src="/screenshots/volumes.png" width="950" title="EBS Volumes">
+  <br>
+  <em>Fig 13.: EBS Volumes </em>
+</p>
+
+
