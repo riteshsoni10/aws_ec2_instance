@@ -83,11 +83,18 @@ sg_id = `aws ec2 create-security-group --group-name allow_ssh_access --descripti
 > profile    => IAM Profile Configured on controller node
 
 <p align="center">
-  <img src="/screenshots/security_group_creation.png" width="950" title="Security Group">
+  <img src="/screenshots/secuity_group_creation.png" width="950" title="Security Group">
   <br>
   <em>Fig 5.: AWS Security Group </em>
 </p>
 
+Authorizing Ingress on 22 TCP port to the instance from Controller Node
+
+<p align="center">
+  <img src="/screenshots/allow_ssh_ingress.png" width="950" title="Allow SSH Ingress">
+  <br>
+  <em>Fig 5.: AWS Security Group </em>
+</p>
 
 ### Instance Key-Pair Generation
 
@@ -104,7 +111,7 @@ aws ec2 create-key-pair --key-name web-key --profile aws_terraform_user | jq -r 
 > jq => JsonQuery Tool for saving the private key in controller node
 
 <p align="center">
-  <img src="/screenshots/key-pair_creation.png" width="950" title="AWS Instance Key-Pair">
+  <img src="/screenshots/key-pair-creation.png" width="950" title="AWS Instance Key-Pair">
   <br>
   <em>Fig 6.: Configure AWS Key-Pair </em>
 </p>
