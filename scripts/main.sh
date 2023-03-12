@@ -180,4 +180,12 @@ operating_system=$(cat /etc/os-release | grep ^NAME)
 ##################################################################################
 #                          Main
 ##################################################################################
+if [[ $CREATE_SECURITY_GROUP ]]; then
+    create_security_group()
+else
+    security_group_id=$SECURITY_GROUP_ID
+    allow_ssh_ingress()
+fi
 
+create_private_key()
+create_ec2_instance()
