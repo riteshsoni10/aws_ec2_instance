@@ -148,14 +148,14 @@ function create_private_key(){
 
 function create_ec2_instance(){
     ## Create EC2 instance
-    aws ec2 run-instances \
+    ec2_instance_id=`aws ec2 run-instances \
     --image-id $AMI_ID \
     --count 1 \
     --instance-type $INSTANCE_TYPE     \
     --key-name $PRIVATE_KEY            \
     --security-group-ids $security_group_id       \
     --subnet-id $SUBNET_ID \
-    --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]'  >/dev/null
+    --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]' | jq -r .Instances[*].InstanceId`
 }
 
 function create_ebs_volume() {
@@ -169,7 +169,7 @@ function create_ebs_volume() {
     ## Attach EBS Volume to the Instance
     aws ec2 attach-volume \
     --device /dev/sdb \
-    --instance-id $instance_id \
+    --instance-id $ec2_instance_id \
     --volume-id $ebs_volume_id
 }
 
@@ -179,7 +179,13 @@ function create_ebs_volume() {
 if [[ $CREATE_SECURITY_GROUP ]]; then
     create_security_group()
 else
-    security_group_id=$SECURITY_GROUP_ID
+    if [[ ! -z "$SECURITY_GROUP_ID" ]]; then
+        security_group_id=$SECURITY_GROUP_ID
+    else:
+        echo "Parameter Initialisation Error!!"
+        echo "Please provide SECURITY_GROUP_ID parameter"
+        exit 1
+    fi
     allow_ssh_ingress()
 fi
 
