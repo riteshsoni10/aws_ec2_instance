@@ -137,13 +137,15 @@ function get_subnet_availability_zone() {
 
 function check_instance_running_state() {
     instance_id="${1}"
+    echo "Checking Instance Status"
     while
         INSTANCE_STATE=$(aws ec2 describe-instances --instance-ids $instance_id --output text --query 'Reservations[*].Instances[*].State.Name')
-        test "$INSTANCE_STATE" = "running"
+        test "$INSTANCE_STATE" != "running"
     do
         sleep 1
-        echo -n 'Instance is in $INSTANCE_STATE state'
+        echo -n '.'
     done
+    echo "Instance is in Running State"
 }
 
 function create_security_group() {
@@ -212,5 +214,5 @@ fi
 
 create_private_key
 create_ec2_instance
-check_instance_running_state
+check_instance_running_state $ec2_instance_id
 create_ebs_volume
