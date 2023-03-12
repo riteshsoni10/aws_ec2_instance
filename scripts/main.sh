@@ -8,7 +8,7 @@ function usage() {
     cat <<HELP_USAGE
 Desciption: Automation script to launch AWS EC2 instace with EBS Volume
 
-Syntax: /bin/bash -v <EBS_VOLUME_SIZE> -a <AWS_ACCESS_KEY> -s <AWS_SECRET_KEY> 
+Syntax: /bin/bash main.sh --vpc_id <VPC_ID> --subnet_id <SUBNET_ID> --ami_id <AMI_ID> --ebs_volume_size <EBS_VOLUME_SIZE> --access_key <AWS_ACCESS_KEY> --secret_key <AWS_SECRET_KEY> 
     --access_key            REQUIRED: AWS ACCESS KEY
     --secret_key            REQUIRED: AWS SECRET KEY
     --vpc_id                REQUIRED: VPC ID
