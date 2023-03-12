@@ -12,9 +12,12 @@ Syntax: /bin/bash -v <EBS_VOLUME_SIZE> -a <AWS_ACCESS_KEY> -s <AWS_SECRET_KEY>
     --access_key            REQUIRED: AWS ACCESS KEY
     --secret_key            REQUIRED: AWS SECRET KEY
     --vpc_id                REQUIRED: VPC ID
+    --ami_id                REQUIRED: EC2 instance AMI ID
+    --instance_type         OPTIONAL: EC2 Instance Type
+    --instance_count        OPTIONAL: Number of EC2 instances to launch
     --ebs_volume_size       OPTIONAL: EBS VOLUME SIZE
     --create_security_group OPTIONAL: BOOL true/false ; DEFAULT: true
-    --security_group_id     OPTIONAL: Existing Security Group Id 
+    --security_group_id     OPTIONAL: Existing Security Group Id
 Output:
     Launches AWS EC2 instance with EBS
 
@@ -58,6 +61,18 @@ while [ $# -gt 0 ]; do
     --vpc_id)
         VPC_ID="$2"
         ;;
+    --ami_id)
+        AMI_ID="$2"
+        ;;
+    --instance_type)
+        INSTANCE_TYPE="$2"
+        ;;
+    --instance_count)
+        INSTANCE_COUNT="$2"
+        ;;
+    --subnet_id)
+        SUBNET_ID="$2"
+        ;;
     --create_security_group)
         CREATE_SECURITY_GROUP="$2"
         ;;
@@ -88,6 +103,8 @@ done
 ## Setting up defaults
 EBS_VOLUME_SIZE=${EBS_VOLUME_SIZE:-"10"}
 CREATE_SECURITY_GROUP=${CREATE_SECURITY_GROUP:-"true"}
+INSTANCE_COUNT=${INSTANCE_COUNT:-"1"}
+INSTANCE_TYPE=${INSTANCE_TYPE:-"t2.micro"}
 
 ## Validating AWS Credentials
 if [[ -z "$ACCESS_KEY" || -z "$SECRET_KEY" ]]; then
@@ -104,6 +121,13 @@ else
     if [[ ! -z "$SESSION_TOKEN" ]]; then
         export AWS_SESSION_TOKEN="$SESSION_TOKEN"
     fi
+fi
+
+## Validate required parameters
+if [[ -z "$VPC_ID" || -z "$AMI_ID" || -z "$SUBNET_ID" ]]; then
+    echo " Missing Required Parameters"
+    echo "Kindly check the parameters passed"
+    exit 1
 fi
 
 ##################################################################################
@@ -123,25 +147,37 @@ function create_security_group() {
 }
 
 function allow_ssh_ingress() {
+    controller_machine_public_ip()
     ## Allow SSH Port from Controller Machine Node
     aws ec2 authorize-security-group-ingress --group-id $security_group_id --protocol tcp --port 22 --cidr "$controller_node_public_ip/32"
 }
 
 function create_private_key(){
     ## Create Private Key and store in the current directory in Controller Node with the same name
-    aws ec2 create-key-pair --key-name $PRIVATE_KEY --profile aws_terraform_user | jq -r '.KeyMaterial' > "$PRIVATE_KEY.pem"
+    aws ec2 create-key-pair --key-name $PRIVATE_KEY | jq -r '.KeyMaterial' > "$PRIVATE_KEY.pem"
+}
+
+function create_ec2_instance(){
+    aws ec2 run-instances \
+    --image-id $AMI_ID \
+    --count $INSTANCE_COUNT \
+    --instance-type $INSTANCE_TYPE     \
+    --key-name $PRIVATE_KEY            \
+    --security-group-ids $security_group_id       \
+    --subnet-id $SUBNET_ID \
+    --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]'  >/dev/null
 }
 
 
 ## Check operating System
 operating_system=$(cat /etc/os-release | grep ^NAME) 
-if [[]]
+
 ## Check if aws cli is installed
 
 ## Install aws cli on machine
 
 
 ##################################################################################
-#                          Main Function
+#                          Main
 ##################################################################################
 
