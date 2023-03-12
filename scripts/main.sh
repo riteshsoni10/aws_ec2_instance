@@ -148,6 +148,11 @@ function create_private_key(){
     aws ec2 create-key-pair --key-name $PRIVATE_KEY | jq -r '.KeyMaterial' > "$PRIVATE_KEY.pem"
 }
 
+function get_subnet_availability_zone(){
+    ## Get Availability zone of the subnet
+    availability_zone=`aws ec2 describe-subnets --subnet-ids $SUBNET_ID | jq .Subnets[0].AvailabilityZone`
+}
+
 function create_ec2_instance(){
     ## Create EC2 instance
     ec2_instance_id=`aws ec2 run-instances \
@@ -161,9 +166,12 @@ function create_ec2_instance(){
 }
 
 function create_ebs_volume() {
+    ## Fetch Availability Zone of the Instance
+    get_subnet_availability_zone
+
     ## Create EBS Volume
     ebs_volume_id=`aws ec2 create-volume \
-    --availability-zone $instance_availability_zone \
+    --availability-zone $availability_zone \
     --size 1 \
     --volume-type gp2 \
     --tag-specifications 'ResourceType=volume,Tags=[{Key="Name",Value="TEST-MACHINE"}]'| jq -r .VolumeId `
