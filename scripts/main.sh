@@ -32,11 +32,11 @@ HELP_USAGE
 
 while [ $# -gt 0 ]; do
     case "$1" in
-    -h|--help) # Display help/usage
+    -h | --help) # Display help/usage
         usage
         exit 1
         ;;
-    
+
     --access_key)
         ACCESS_KEY="$2"
         ;;
@@ -71,7 +71,7 @@ while [ $# -gt 0 ]; do
     --private_key_name)
         PRIVATE_KEY="$2"
         ;;
-    --ebs_volume_sizes) 
+    --ebs_volume_sizes)
         EBS_VOLUME_SIZE="$2"
         ;;
     *)
@@ -130,10 +130,26 @@ function controller_machine_public_ip() {
     controller_node_public_ip=$(curl ifconfig.me)
 }
 
+function get_subnet_availability_zone() {
+    ## Get Availability zone of the subnet
+    availability_zone=$(aws ec2 describe-subnets --subnet-ids $SUBNET_ID | jq -r .Subnets[0].AvailabilityZone)
+}
+
+function check_instance_running_state() {
+    instance_id="${1}"
+    while
+        INSTANCE_STATE=$(aws ec2 describe-instances --instance-ids $instance_id --output text --query 'Reservations[*].Instances[*].State.Name')
+        test "$INSTANCE_STATE" = "running"
+    do
+        sleep 1
+        echo -n 'Instance not yet in RUNNING state'
+    done
+}
+
 function create_security_group() {
     ## Create new security group
-    security_group_id=`aws ec2 create-security-group --group-name allow_ssh_access --description "Allow SSH Access" \
---vpc-id $VPC_ID | jq -r '.GroupId'`
+    security_group_id=$(aws ec2 create-security-group --group-name allow_ssh_access --description "Allow SSH Access" \
+        --vpc-id $VPC_ID | jq -r '.GroupId')
 
 }
 
@@ -143,26 +159,21 @@ function allow_ssh_ingress() {
     aws ec2 authorize-security-group-ingress --group-id $security_group_id --protocol tcp --port 22 --cidr "$controller_node_public_ip/32"
 }
 
-function create_private_key(){
+function create_private_key() {
     ## Create Private Key and store in the current directory in Controller Node with the same name
-    aws ec2 create-key-pair --key-name $PRIVATE_KEY | jq -r '.KeyMaterial' > "$PRIVATE_KEY.pem"
+    aws ec2 create-key-pair --key-name $PRIVATE_KEY | jq -r '.KeyMaterial' >"$PRIVATE_KEY.pem"
 }
 
-function get_subnet_availability_zone(){
-    ## Get Availability zone of the subnet
-    availability_zone=`aws ec2 describe-subnets --subnet-ids $SUBNET_ID | jq .Subnets[0].AvailabilityZone`
-}
-
-function create_ec2_instance(){
+function create_ec2_instance() {
     ## Create EC2 instance
-    ec2_instance_id=`aws ec2 run-instances \
-    --image-id $AMI_ID \
-    --count 1 \
-    --instance-type $INSTANCE_TYPE     \
-    --key-name $PRIVATE_KEY            \
-    --security-group-ids $security_group_id       \
-    --subnet-id $SUBNET_ID \
-    --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]' | jq -r .Instances[*].InstanceId`
+    ec2_instance_id=$(aws ec2 run-instances \
+        --image-id $AMI_ID \
+        --count 1 \
+        --instance-type $INSTANCE_TYPE \
+        --key-name $PRIVATE_KEY \
+        --security-group-ids $security_group_id \
+        --subnet-id $SUBNET_ID \
+        --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]' | jq -r .Instances[*].InstanceId)
 }
 
 function create_ebs_volume() {
@@ -170,17 +181,17 @@ function create_ebs_volume() {
     get_subnet_availability_zone
 
     ## Create EBS Volume
-    ebs_volume_id=`aws ec2 create-volume \
-    --availability-zone $availability_zone \
-    --size 1 \
-    --volume-type gp2 \
-    --tag-specifications 'ResourceType=volume,Tags=[{Key="Name",Value="TEST-MACHINE"}]'| jq -r .VolumeId `
+    ebs_volume_id=$(aws ec2 create-volume \
+        --availability-zone $availability_zone \
+        --size 1 \
+        --volume-type gp2 \
+        --tag-specifications 'ResourceType=volume,Tags=[{Key="Name",Value="TEST-MACHINE"}]' | jq -r .VolumeId)
 
     ## Attach EBS Volume to the Instance
     aws ec2 attach-volume \
-    --device /dev/sdb \
-    --instance-id $ec2_instance_id \
-    --volume-id $ebs_volume_id
+        --device /dev/sdb \
+        --instance-id $ec2_instance_id \
+        --volume-id $ebs_volume_id
 }
 
 ##################################################################################
@@ -191,7 +202,7 @@ if [[ $CREATE_SECURITY_GROUP ]]; then
 else
     if [[ ! -z "$SECURITY_GROUP_ID" ]]; then
         security_group_id=$SECURITY_GROUP_ID
-    else:
+        else:
         echo "Parameter Initialisation Error!!"
         echo "Please provide SECURITY_GROUP_ID parameter"
         exit 1
@@ -201,4 +212,5 @@ fi
 
 create_private_key
 create_ec2_instance
+check_instance_running_state
 create_ebs_volume
