@@ -2,6 +2,19 @@
 
 The project consists the steps to provision compute instance on AWS Public Cloud using AWS CLI. The connectivity of the instance is configured from the controller node using security groups over the internet.
 
+- [Compute Server Provisioning using AWS CLI](#compute-server-provisioning-using-aws-cli)
+  - [Scope of the Project](#scope-of-the-project)
+  - [Pre-Requisites](#pre-requisites)
+    - [IAM User in AWS Account](#iam-user-in-aws-account)
+    - [Configure the AWS Profile in Controller Node](#configure-the-aws-profile-in-controller-node)
+  - [Automation Script](#automation-script)
+  - [Step-by-Step Instructions](#step-by-step-instructions)
+    - [Security Groups](#security-groups)
+    - [Instance Key-Pair Generation](#instance-key-pair-generation)
+    - [EC2 Instance](#ec2-instance)
+    - [Provision EBS Volume](#provision-ebs-volume)
+  - [Screenshots](#screenshots)
+
 ## Scope of the Project
 
 1. Allow SSH Access from the controller node(using Security Group)
@@ -63,6 +76,15 @@ aws configure --profile <profile_name>
   <br>
   <em>Fig 4.: Configure AWS Profile </em>
 </p>
+
+
+## Automation Script
+
+The automation script creates all the resources briedfly described step by step below. The script is present in `scripts` directory.
+
+## Step-by-Step Instructions
+
+Step by Step instructions to create AWS EC2 instance and attach EBS volume is described in below steps.
 
 
 ### Security Groups
