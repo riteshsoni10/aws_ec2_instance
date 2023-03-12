@@ -142,7 +142,7 @@ function check_instance_running_state() {
         test "$INSTANCE_STATE" = "running"
     do
         sleep 1
-        echo -n 'Instance not yet in RUNNING state'
+        echo -n 'Instance is in $INSTANCE_STATE state'
     done
 }
 
