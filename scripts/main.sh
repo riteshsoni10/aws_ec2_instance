@@ -13,9 +13,10 @@ Syntax: /bin/bash -v <EBS_VOLUME_SIZE> -a <AWS_ACCESS_KEY> -s <AWS_SECRET_KEY>
     --secret_key            REQUIRED: AWS SECRET KEY
     --vpc_id                REQUIRED: VPC ID
     --ami_id                REQUIRED: EC2 instance AMI ID
+    --subnet_id             REQUIRED: Subnet Id
     --instance_type         OPTIONAL: EC2 Instance Type
-    --instance_count        OPTIONAL: Number of EC2 instances to launch
     --ebs_volume_size       OPTIONAL: EBS VOLUME SIZE
+    --private_key_name      OPTIONAL: Instance Private Key Name
     --create_security_group OPTIONAL: BOOL true/false ; DEFAULT: true
     --security_group_id     OPTIONAL: Existing Security Group Id
 Output:
@@ -24,15 +25,6 @@ Output:
 NOTE: Script is only tested on Ubuntu Operating System
 HELP_USAGE
 }
-
-
-##################################################################################
-#                           DEFAULTS
-##################################################################################
-EBS_VOLUME_SIZE="10"
-
-
-
 
 ##################################################################################
 #                           PROCESS INPUT VARIABLES
@@ -67,9 +59,6 @@ while [ $# -gt 0 ]; do
     --instance_type)
         INSTANCE_TYPE="$2"
         ;;
-    --instance_count)
-        INSTANCE_COUNT="$2"
-        ;;
     --subnet_id)
         SUBNET_ID="$2"
         ;;
@@ -103,8 +92,8 @@ done
 ## Setting up defaults
 EBS_VOLUME_SIZE=${EBS_VOLUME_SIZE:-"10"}
 CREATE_SECURITY_GROUP=${CREATE_SECURITY_GROUP:-"true"}
-INSTANCE_COUNT=${INSTANCE_COUNT:-"1"}
 INSTANCE_TYPE=${INSTANCE_TYPE:-"t2.micro"}
+PRIVATE_KEY=${PRIVATE_KEY:-"test-machine"}
 
 ## Validating AWS Credentials
 if [[ -z "$ACCESS_KEY" || -z "$SECRET_KEY" ]]; then
@@ -161,7 +150,7 @@ function create_ec2_instance(){
     ## Create EC2 instance
     aws ec2 run-instances \
     --image-id $AMI_ID \
-    --count $INSTANCE_COUNT \
+    --count 1 \
     --instance-type $INSTANCE_TYPE     \
     --key-name $PRIVATE_KEY            \
     --security-group-ids $security_group_id       \
