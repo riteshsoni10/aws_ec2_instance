@@ -158,6 +158,7 @@ function create_private_key(){
 }
 
 function create_ec2_instance(){
+    ## Create EC2 instance
     aws ec2 run-instances \
     --image-id $AMI_ID \
     --count $INSTANCE_COUNT \
@@ -168,17 +169,23 @@ function create_ec2_instance(){
     --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]'  >/dev/null
 }
 
+function create_ebs_volume() {
+    ## Create EBS Volume
+    ebs_volume_id=`aws ec2 create-volume \
+    --availability-zone $instance_availability_zone \
+    --size 1 \
+    --volume-type gp2 \
+    --tag-specifications 'ResourceType=volume,Tags=[{Key="Name",Value="TEST-MACHINE"}]'| jq -r .VolumeId `
 
-## Check operating System
-operating_system=$(cat /etc/os-release | grep ^NAME) 
-
-## Check if aws cli is installed
-
-## Install aws cli on machine
-
+    ## Attach EBS Volume to the Instance
+    aws ec2 attach-volume \
+    --device /dev/sdb \
+    --instance-id $instance_id \
+    --volume-id $ebs_volume_id
+}
 
 ##################################################################################
-#                          Main
+#                          Main Logic
 ##################################################################################
 if [[ $CREATE_SECURITY_GROUP ]]; then
     create_security_group()
@@ -189,3 +196,4 @@ fi
 
 create_private_key()
 create_ec2_instance()
+create_ebs_volume()
