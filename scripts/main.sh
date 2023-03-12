@@ -173,7 +173,7 @@ function create_ec2_instance() {
         --key-name $PRIVATE_KEY \
         --security-group-ids $security_group_id \
         --subnet-id $SUBNET_ID \
-        --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]' | jq -r .Instances[*].InstanceId)
+        --tag-specifications 'ResourceType=instance,Tags=[{Key="Name",Value="TEST-MACHINE"}]' | jq -r .Instances[0].InstanceId)
 }
 
 function create_ebs_volume() {
