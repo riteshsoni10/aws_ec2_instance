@@ -83,6 +83,8 @@ while [ $# -gt 0 ]; do
         exit 1
         ;;
     esac
+    shift
+    shift
 done
 
 ##################################################################################
@@ -131,12 +133,12 @@ function controller_machine_public_ip() {
 function create_security_group() {
     ## Create new security group
     security_group_id=`aws ec2 create-security-group --group-name allow_ssh_access --description "Allow SSH Access" \
---vpc-id $vpc_id | jq -r '.GroupId'`
+--vpc-id $VPC_ID | jq -r '.GroupId'`
 
 }
 
 function allow_ssh_ingress() {
-    controller_machine_public_ip()
+    controller_machine_public_ip
     ## Allow SSH Port from Controller Machine Node
     aws ec2 authorize-security-group-ingress --group-id $security_group_id --protocol tcp --port 22 --cidr "$controller_node_public_ip/32"
 }
@@ -177,7 +179,7 @@ function create_ebs_volume() {
 #                          Main Logic
 ##################################################################################
 if [[ $CREATE_SECURITY_GROUP ]]; then
-    create_security_group()
+    create_security_group
 else
     if [[ ! -z "$SECURITY_GROUP_ID" ]]; then
         security_group_id=$SECURITY_GROUP_ID
@@ -186,9 +188,9 @@ else
         echo "Please provide SECURITY_GROUP_ID parameter"
         exit 1
     fi
-    allow_ssh_ingress()
+    allow_ssh_ingress
 fi
 
-create_private_key()
-create_ec2_instance()
-create_ebs_volume()
+create_private_key
+create_ec2_instance
+create_ebs_volume
